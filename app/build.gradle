@@ -1,17 +1,18 @@
+import java.nio.file.Files
+import java.nio.file.Paths
+
 plugins {
     id 'com.android.application'
 }
 
 android {
-    compileSdk 31
+    compileSdk 32
 
     defaultConfig {
-        applicationId "com.picapico.scrcpyhttp"
-        minSdk 21
-        targetSdk 31
-        versionCode 1
-        versionName "1.0"
-
+        minSdkVersion 21
+        targetSdkVersion 32
+        versionCode 12400
+        versionName "1.24"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -21,14 +22,34 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+}
+
+tasks.whenTaskAdded { task ->
+//    println("哈哈哈哈哈" + task.name)
+    if (task.name.contains('BuildConfig')) {
+        task.doLast {
+            def outdir = task.name.toLowerCase().contains("debug") ? "debug" : "release"
+            def outRoot = rootProject.file("app").path + File.separator + "build" + File.separator +
+                    "generated" + File.separator + "source" + File.separator +
+                    "buildConfig" + File.separator + outdir + File.separator + "com"
+            def fromFilePath = outRoot + File.separator + "picapico" + File.separator +
+                    "scrcpyhttp" + File.separator + "BuildConfig.java"
+            def intoFileDirPath = outRoot + File.separator + "genymobile" + File.separator + "scrcpy"
+            def intoFilePath = intoFileDirPath + File.separator + "BuildConfig.java"
+
+            def sourceText = new String(Files.readAllBytes(Paths.get(fromFilePath)))
+                    .replaceAll("com.picapico.scrcpyhttp", "com.genymobile.scrcpy")
+            File intoFileDir = new File(intoFileDirPath)
+            intoFileDir.mkdirs()
+            File intoFile = new File(intoFilePath)
+            intoFile.createNewFile()
+            def intoFileWrite = new FileWriter(intoFile)
+            intoFileWrite.write(sourceText)
+            intoFileWrite.close()
+        }
     }
 }
 
 dependencies {
     testImplementation 'junit:junit:4.13.2'
-    androidTestImplementation 'androidx.test.ext:junit:1.1.3'
-    androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
 }
